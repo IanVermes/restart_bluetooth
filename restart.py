@@ -37,20 +37,26 @@ class PlatypusPrint:
 
     def alert(self, title, message):
         if self._constants.use_platypus:
-            print("ALERT:%s|%s\n" % title, message)
+            self.print("ALERT:%s|%s\n" % title, message)
         else:
             alert_message = "\aALERT: %s" % message
             self.print(alert_message)
 
     def notification(self, message):
         if self._constants.use_platypus:
-            print("NOTIFICATION:%s\n" % message)
+            self.print("NOTIFICATION:%s\n" % message)
         else:
             self.print(message)
 
     def progress_bar(self, percent):
         if self._constants.use_platypus:
-            print("PROGRESS:%i\n" % int(percent))
+            self.print("PROGRESS:%i\n" % int(percent))
+
+    def progress_bar_show_details(self):
+        self.print("DETAILS:SHOW\n")
+
+    def progress_bar_hide_details(self):
+        self.print("DETAILS:HIDE\n")
 
     def exit_gui(self):
         if self._constants.use_platypus:
@@ -90,6 +96,17 @@ def start_bluetooth_service():
     command = shlex.split(command_s)
     _do_command(command, check=True)
     return command
+
+
+def auto_exit():
+    duration = 10  # Seconds
+    time_stop = time.time() + duration
+    while True:
+        if time.time() > time_stop:
+            break
+        else:
+            wait()
+    PRINTER.exit_gui()
 
 
 def wait():
@@ -147,7 +164,6 @@ def _process_constants():
 
 
 def main():
-    _process_constants()
     if not _is_blueutil():
         PRINTER.alert(
             "Oh no!",
@@ -159,11 +175,13 @@ def main():
             (stop_bluetooth_service, "BlueTooth OFF"),
             (wait, ""),
             (wait, ""),
-            (wait, ""),
             (start_bluetooth_service, "BlueTooth ON"),
             (wait, ""),
+            (wait, ""),
             (None, "Done!"),
+            (wait, ""),
         ]
+        PRINTER.progress_bar_show_details()
         PRINTER.progress_bar(0)
         for i, (func, message) in enumerate(bar):
             percent = int(float(i) / len(bar) * 100)
@@ -172,11 +190,14 @@ def main():
 
             if message:
                 PRINTER.print(message)
-
             PRINTER.progress_bar(percent)
-
-    # PRINTER.exit_gui()
+        else:
+            PRINTER.progress_bar(100)
+            PRINTER.progress_bar_hide_details()
+            PRINTER.print("\n\n\n(... automatically quitting in 10 seconds ...)")
+            auto_exit()
 
 
 if __name__ == "__main__":
+    _process_constants()
     main()
