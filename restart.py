@@ -53,10 +53,12 @@ class PlatypusPrint:
             self.print("PROGRESS:%i\n" % int(percent))
 
     def progress_bar_show_details(self):
-        self.print("DETAILS:SHOW\n")
+        if self._constants.use_platypus:
+            self.print("DETAILS:SHOW\n")
 
     def progress_bar_hide_details(self):
-        self.print("DETAILS:HIDE\n")
+        if self._constants.use_platypus:
+            self.print("DETAILS:HIDE\n")
 
     def exit_gui(self):
         if self._constants.use_platypus:
@@ -194,7 +196,7 @@ def main():
         else:
             PRINTER.progress_bar(100)
             PRINTER.progress_bar_hide_details()
-            PRINTER.print("\n\n\n(... automatically quitting in 10 seconds ...)")
+            PRINTER.print("(... automatically quitting in 10 seconds ...)")
             auto_exit()
 
 
