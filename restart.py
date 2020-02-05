@@ -37,7 +37,7 @@ class PlatypusPrint:
 
     def alert(self, title, message):
         if self._constants.use_platypus:
-            self.print("ALERT:%s|%s\n" % title, message)
+            self.print("ALERT:%s|%s\n" % (title, message))
         else:
             alert_message = "\aALERT: %s" % message
             self.print(alert_message)
@@ -169,8 +169,9 @@ def main():
     if not _is_blueutil():
         PRINTER.alert(
             "Oh no!",
-            "Install blueutil first, then run script again\n"
-            "  $ brew install blueutil",
+            "Install %(program)s first, then run script again\n"
+            "Do `$ brew install %(program)s` to continue."
+            % {"program": CONSTANTS.program},
         )
     else:
         bar = [
@@ -196,8 +197,11 @@ def main():
         else:
             PRINTER.progress_bar(100)
             PRINTER.progress_bar_hide_details()
-            PRINTER.print("(... automatically quitting in 10 seconds ...)")
-            auto_exit()
+            if CONSTANTS.use_platypus:
+                PRINTER.print("(... automatically quitting in 10 seconds ...)")
+                auto_exit()
+            else:
+                PRINTER.exit_gui()
 
 
 if __name__ == "__main__":
