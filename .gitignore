@@ -133,3 +133,6 @@ dmypy.json
 
 # Virtual environment
 venv
+
+# Platypus generated OS X app
+*.app/
