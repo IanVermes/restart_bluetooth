@@ -47,12 +47,13 @@
 	<key>PromptForFileOnLaunch</key>
 	<false/>
 	<key>RemainRunning</key>
-	<false/>
+	<true/>
 	<key>RunInBackground</key>
 	<false/>
 	<key>ScriptArgs</key>
 	<array>
-		<string>/usr/local/bin</string>
+		<string>"/usr/local/bin"</string>
+		<string>"platypus"</string>
 	</array>
 	<key>ScriptPath</key>
 	<string>/Users/Ian/GoogleDrive/code/restart_osx_bluetooth/restart.py</string>
