@@ -6,13 +6,15 @@ Restart OS X Bluetooth
 OS X bluetooth devices sometimes disconnect and cannot reconnect without turn the
 systems Bluetooth support off and then back on.
 
-$ python restart.py
+`$ python restart.py`
 or
-$ python restart.py $PATH_TO_HOMEBREW_INSTALL_DIR
+`$ python restart.py $PATH_TO_HOMEBREW_INSTALL_DIR "platypus"`
 
 The $PATH_TO_HOMEBREW_INSTALL_DIR value may be something like `/usr/local/bin` and is a
 pass-through value for things Desktop app wrappers like Platypus.
 """
+from __future__ import print_function
+
 import os
 import sys
 import subprocess
@@ -22,36 +24,79 @@ import time
 PY3 = sys.version_info.major >= 3
 
 
-def is_blueutil():
+class Constants(object):
+    def __init__(self):
+        self.use_platypus = False
+        self.program = "blueutil"
+        self.blueutil = self.program
+
+
+class PlatypusPrint:
+    def __init__(self, constants):
+        self._constants = constants
+
+    def alert(self, title, message):
+        if self._constants.use_platypus:
+            print("ALERT:%s|%s\n" % title, message)
+        else:
+            alert_message = "\aALERT: %s" % message
+            self.print(alert_message)
+
+    def notification(self, message):
+        if self._constants.use_platypus:
+            print("NOTIFICATION:%s\n" % message)
+        else:
+            self.print(message)
+
+    def progress_bar(self, percent):
+        if self._constants.use_platypus:
+            print("PROGRESS:%i\n" % int(percent))
+
+    def exit_gui(self):
+        if self._constants.use_platypus:
+            print("QUITAPP\n")
+        else:
+            exit(0)
+
+    def print(self, message):
+        if PY3:
+            print(message, flush=True)
+        else:
+            print(message)
+            sys.stdout.flush()
+
+
+CONSTANTS = Constants()
+PRINTER = PlatypusPrint(CONSTANTS)
+
+
+def _is_blueutil():
     # We need this program
-    command_s = "which %s" % process_blueutil_path()
+    command_s = "which %s" % CONSTANTS.blueutil
     command = shlex.split(command_s)
-    result = do_command(command, capture_output=True)
+    result = _do_command(command, capture_output=True)
     return result == 0
 
 
 def stop_bluetooth_service():
-    command_s = "%s -p 0" % process_blueutil_path()
+    command_s = "%s -p 0" % CONSTANTS.blueutil
     command = shlex.split(command_s)
-    do_command(command, check=True)
-    print("BlueTooth OFF")
+    _do_command(command, check=True)
     return
 
 
 def start_bluetooth_service():
-    command_s = "%s -p 1" % process_blueutil_path()
+    command_s = "%s -p 1" % CONSTANTS.blueutil
     command = shlex.split(command_s)
-    do_command(command, check=True)
-    print("BlueTooth ON")
+    _do_command(command, check=True)
     return command
 
 
 def wait():
-    print("...")
     time.sleep(1)
 
 
-def do_command(command, check=False, capture_output=False):
+def _do_command(command, check=False, capture_output=False):
     if PY3:
         process_obj = subprocess.run(
             command, capture_output=capture_output, check=check
@@ -74,30 +119,63 @@ def _do_command_py2(command, check=False, capture_output=False):
     return check_code
 
 
-def process_blueutil_path():
+def _process_constants():
+    # set `blueutil`
     try:
         brew_directory = sys.argv[1]
     except IndexError:
         brew_directory = ""
 
-    basename = "blueutil"
     if brew_directory:
-        fullpath = os.path.join(brew_directory, basename)
+        fullpath = os.path.join(brew_directory, CONSTANTS.program)
     else:
-        fullpath = basename
-    return fullpath
+        fullpath = CONSTANTS.program
+    CONSTANTS.blueutil = fullpath
+
+    # set `use_platypus`
+    try:
+        raw_platypus = sys.argv[2]
+    except IndexError:
+        raw_platypus = ""
+
+    if raw_platypus:
+        use_platypus = "platypus" in raw_platypus.lower().strip()
+    else:
+        use_platypus = False
+    CONSTANTS.use_platypus = use_platypus
+    return
 
 
 def main():
-    if not is_blueutil():
-        print(
-            "\aInstall blueutil first, then run script again\n"
-            "  $ brew install blueutil"
+    _process_constants()
+    if not _is_blueutil():
+        PRINTER.alert(
+            "Oh no!",
+            "Install blueutil first, then run script again\n"
+            "  $ brew install blueutil",
         )
     else:
-        stop_bluetooth_service()
-        wait()
-        start_bluetooth_service()
+        bar = [
+            (stop_bluetooth_service, "BlueTooth OFF"),
+            (wait, ""),
+            (wait, ""),
+            (wait, ""),
+            (start_bluetooth_service, "BlueTooth ON"),
+            (wait, ""),
+            (None, "Done!"),
+        ]
+        PRINTER.progress_bar(0)
+        for i, (func, message) in enumerate(bar):
+            percent = int(float(i) / len(bar) * 100)
+            if func is not None:
+                func()
+
+            if message:
+                PRINTER.print(message)
+
+            PRINTER.progress_bar(percent)
+
+    # PRINTER.exit_gui()
 
 
 if __name__ == "__main__":
