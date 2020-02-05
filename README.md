@@ -1,4 +1,4 @@
-# restart_osx_bluetooth
+# restart_bluetooth
 **Restarts the Bluetooth service in OS X.**
 
 Because sometimesswithcing OFF and ON is too much like work.
