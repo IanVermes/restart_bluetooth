@@ -9,46 +9,50 @@ systems Bluetooth support off and then back on.
 """
 import subprocess
 import shlex
-import getpass
-
-__KEXT_NAME = "com.apple.iokit.BroadcomBluetoothHostControllerUSBTransport"
+import time
 
 
-def prompt_password():
-    password = getpass.getpass("Please enter your password: ")
-    return password
-
-
-def unload_kext(password):
-    command_s = " ".join(["sudo -S kextunload -b", __KEXT_NAME])
+def is_blueutil():
+    # We need this program
+    command_s = "which blueutil"
     command = shlex.split(command_s)
-    do_command(command, password)
+    result = do_command(command, capture_output=True)
+    return result.returncode == 0
+
+
+def stop_bluetooth_service():
+    command_s = "blueutil -p 0"
+    command = shlex.split(command_s)
+    do_command(command, check=True)
     return
 
 
-def load_kext(password):
-    command_s = " ".join(["sudo -S kextload -b", __KEXT_NAME])
+def start_bluetooth_service():
+    command_s = "blueutil -p 1"
     command = shlex.split(command_s)
-    do_command(command, password)
+    do_command(command, check=True)
     return command
 
 
-def do_command(command, password):
-    process = subprocess.Popen(
-        command,
-        shell=False,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    process.communicate(password.encode())
-    return
+def wait():
+    time.sleep(1)
+
+
+def do_command(command, *_, **kwargs):
+    result = subprocess.run(command, **kwargs)
+    return result
 
 
 def main():
-    password = prompt_password()
-    unload_kext(password)
-    load_kext(password)
+    if not is_blueutil():
+        print(
+            "\aInstall blueutil first, then run script again\n"
+            "  $ brew install blueutil"
+        )
+    else:
+        stop_bluetooth_service()
+        wait()
+        start_bluetooth_service()
 
 
 if __name__ == "__main__":
