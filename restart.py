@@ -24,6 +24,7 @@ def stop_bluetooth_service():
     command_s = "blueutil -p 0"
     command = shlex.split(command_s)
     do_command(command, check=True)
+    print("BlueTooth OFF")
     return
 
 
@@ -31,10 +32,12 @@ def start_bluetooth_service():
     command_s = "blueutil -p 1"
     command = shlex.split(command_s)
     do_command(command, check=True)
+    print("BlueTooth ON")
     return command
 
 
 def wait():
+    print("...")
     time.sleep(1)
 
 
