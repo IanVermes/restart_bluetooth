@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "restart_osx_bluetooth"
+version = "0.1.0"
+description = "Restart the bluetooth system in OS X, in a single script."
+authors = ["Ian Vermes <ian.vermes@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.dev-dependencies]
+black = "^19.10b0"
+flake8 = "^3.7.9"
+ipython = "^7.12.0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
