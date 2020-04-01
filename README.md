@@ -1,7 +1,7 @@
 # restart_bluetooth
 **Restarts the Bluetooth service in OS X.**
 
-Because sometimesswithcing OFF and ON is too much like work.
+Because sometimes switching it OFF and ON is too much like work.
 
 ## Requirements
 1. Install [blueutil](https://github.com/toy/blueutil): `$ brew instal blueutil`
